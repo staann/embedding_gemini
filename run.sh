@@ -1,0 +1,6 @@
+#!/bin/bash
+cd /mnt/c/Users/Gustavo/desktop/recomendador_unb
+source venv/bin/activate
+export SUPABASE_URL="https://lijmhbstgdinsukovyfl.supabase.co"
+export SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxpam1oYnN0Z2RpbnN1a292eWZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzgzOTM3MywiZXhwIjoyMDYzNDE1MzczfQ._o2wq5p0C6YBIrTGJsNl6xdg4l8Ju7CbwvaaeCWbeAc"
+python servidor_mcp.py

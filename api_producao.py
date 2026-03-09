@@ -101,34 +101,34 @@ def ferramenta_buscar_materias_unb(interesse: str) -> str:
         resposta = supabase.rpc("match_materias", {
             "query_embedding": vetor,
             "match_threshold": 0.50, 
-            "match_count": 50         
+            "match_count": 10         
         }).execute()
         
         dados = resposta.data or []
         
         # FILTRO DE ELITE: Prioriza departamentos de tecnologia (CIC, FGA, ENE)
         # e remove ruídos óbvios (Educação Física, Pedagogia) se houver opção melhor
-        tecnologia = [i for i in dados if any(prefix in i.get('codigo_materia', '') for prefix in ['CIC', 'FGA', 'ENE', 'MAT'])]
-        outros = [i for i in dados if i not in tecnologia]
+        #tecnologia = [i for i in dados if any(prefix in i.get('codigo_materia', '') for prefix in ['CIC', 'FGA', 'ENE', 'MAT'])]
+        #outros = [i for i in dados if i not in tecnologia]
         
         # Junta dando prioridade total para tecnologia
-        dados_filtrados = (tecnologia + outros)[:20]
+        #dados_filtrados = (tecnologia + outros)[:20]
 
         print("\n" + "="*50)
         print("🔍 DEBUG: MATÉRIAS DIRETAS DO BANCO (PRÉ-IA)")
-        for i, item in enumerate(dados_filtrados[:10]): # Mostra as top 10
+        for i, item in enumerate(dados):#dados_filtrados[:10]): # Mostra as top 10
              print(f"{i+1}. {item.get('codigo_materia')} - {item.get('nome_materia')} (Sim: {item.get('similaridade')})")
         print("="*50 + "\n")
 
         lista_final = []
-        for item in dados_filtrados:
+        for item in dados:#dados_filtrados:
             lista_final.append({
                 "codigo": item.get("codigo_materia"),
                 "nome": item.get("nome_materia"),
                 "similaridade": round(item.get("similaridade", 0), 2)
             })
 
-        print(f"[DEBUG] Filtradas {len(lista_final)} matérias. Tecnologia encontradas: {len(tecnologia)}")
+        print(f"[DEBUG] Filtradas {len(lista_final)} matérias.")
         return json.dumps(lista_final, ensure_ascii=False)
     
     except Exception as e:

@@ -1,44 +1,126 @@
-🚀 Recomendador de Disciplinas Acadêmicas
-Este projeto utiliza agentes de IA para recomendar disciplinas com base nos interesses do usuário, integrando Supabase como banco de dados e diversos provedores de LLM.
+# 🚀 Recomendador de Disciplinas Acadêmicas UnB
 
-🛠️ Configuração do Ambiente
-Antes de iniciar, você precisa configurar as variáveis de ambiente. Crie um arquivo .env na raiz do projeto e preencha com suas credenciais:
+Sistema inteligente de recomendação de disciplinas acadêmicas utilizando agentes de IA para sugerir cursos com base nos interesses do usuário. O projeto integra múltiplos provedores de LLM (Large Language Models) e utiliza Supabase como banco de dados.
 
-Snippet de código
 
+## ✨ Características
+
+- 🤖 **Agentes de IA Inteligentes**: Utiliza agentes especializados para análise e recomendação de disciplinas
+- 🔍 **Busca Semântica**: Análise de similaridade entre interesses do usuário e conteúdo das disciplinas
+- 🌐 **API REST**: Interface FastAPI para fácil integração
+- 📊 **Base de Dados Completa**: Integração com Supabase para persistência de dados
+- 🔄 **Múltiplos Provedores LLM**: Suporte para Google Gemini e Maritaca AI
+- 🎯 **Recomendações Personalizadas**: Sistema que aprende com os interesses específicos de cada usuário
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+| Tecnologia | Descrição |
+|------------|-----------|
+| **Python 3.x** | Linguagem de programação principal |
+| **FastAPI** | Framework web para construção da API |
+| **Supabase** | Banco de dados PostgreSQL hospedado |
+| **Google Gemini** | Modelo de linguagem da Google |
+| **Maritaca AI** | Modelo de linguagem brasileiro |
+| **Uvicorn** | Servidor ASGI para Python |
+| **MCP** | Model Context Protocol para agentes |
+
+---
+
+## 📦 Pré-requisitos
+
+Antes de começar, certifique-se de ter instalado:
+
+- **Python 3.8+**
+- **pip** (gerenciador de pacotes Python)
+- **Git** (para clonar o repositório)
+- Conta no [Supabase](https://supabase.com/)
+- API Keys para os provedores de IA (Google Gemini e/ou Maritaca)
+
+---
+
+## 🚀 Instalação
+
+### 1. Clone o repositório
+
+```bash
+git clone <url-do-repositorio>
+cd recomendador_unb
+```
+
+### 2. Crie um ambiente virtual (recomendado)
+
+```bash
+python -m venv venv
+source venv/bin/activate  # No Windows: venv\Scripts\activate
+```
+
+### 3. Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## ⚙️ Configuração
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+
+```env
 # Configurações do Banco de Dados (Supabase)
-SUPABASE_URL="sua_url_aqui"
+SUPABASE_URL="https://seu-projeto.supabase.co"
 SUPABASE_SERVICE_ROLE_KEY="sua_chave_service_role_aqui"
 
 # Chaves de API de IA
 GOOGLE_API_KEY="sua_chave_google_gemini_aqui"
 MARITACA_API_KEY="sua_chave_maritalk_aqui"
-💻 Como Executar
-Siga os passos abaixo para rodar a aplicação localmente:
+```
 
-1. Instale as dependências
-Certifique-se de ter o Python instalado e execute:
+## 💻 Como Usar
 
-Bash
 
-pip install -r requirements.txt
-2. Inicie o servidor da API
-Execute o arquivo principal de produção:
 
-Bash
+#### Comando direto
 
-python api_producao_gemini.py
-Aguarde até visualizar a mensagem: INFO: Application startup complete.
+```bash
+uvicorn api_producao_gemini:app --reload
+```
 
-3. Realize uma requisição
-Com o servidor rodando, abra um novo terminal e utilize o curl para testar o recomendador:
+O servidor iniciará em `http://127.0.0.1:8000`
 
-Bash
+Aguarde a mensagem: 
+```
+INFO: Application startup complete.
+```
 
+## 📖 Exemplos de Uso
+
+### Exemplo 1: Usando cURL
+
+```bash
 curl -X POST "http://127.0.0.1:8000/recomendar" \
      -H "Content-Type: application/json" \
-     -d '{"interesse": "IA e Aprendizado de Máquina"}'
-📂 Arquivos Principais
-api_producao_gemini.py: Ponto de entrada da API FastAPI que gerencia a lógica de recomendação.
+     -d '{"interesse": "Aprendizado de Máquina"}'
+```
 
-requirements.txt: Lista de todas as bibliotecas necessárias para o funcionamento do projeto.
+### Estrutura de Dados
+
+O sistema trabalha com dados de disciplinas da UnB, incluindo:
+- Códigos de disciplina
+- Nomes e descrições
+
+---
+
+Contribuições são bem-vindas! Para contribuir:
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+---

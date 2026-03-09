@@ -3,7 +3,7 @@ from google.genai import types
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
-client = genai.Client(api_key = "AIzaSyAnuy02euC_YI2PGsYz2j4EhHS_Vp65bY4")
+client = genai.Client(api_key = "")
 
 texts = [
     "inteligencia artificial",

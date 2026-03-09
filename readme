@@ -1,15 +1,15 @@
-# Configurar o .env
+#Configurar o .env
 
 SUPABASE_URL=""
 SUPABASE_SERVICE_ROLE_KEY=""
 GOOGLE_API_KEY=""
 MARITACA_API_KEY=""
 
-# Como executar:
-1. Instale as dependências:
-   pip install -r requirements.txt
+#Como executar:
+##1. Instale as dependências:
+##   pip install -r requirements.txt
 
-# Arquivos principais:
-- api_producao_gemini.py: execute este arquivo e espere a mensagem "INFO:     Application startup complete."
+#Arquivos principais:
+##- api_producao_gemini.py: execute este arquivo e espere a mensagem "INFO:     Application startup complete."
 
-- Em um outro terminal, execute:  curl -X POST "http://127.0.0.1:8000/recomendar"      -H "Content-Type: application/json"      -d '{"interesse": "disciplina de interesse"}'
+##- Em um outro terminal, execute:  curl -X POST "http://127.0.0.1:8000/recomendar"      -H "Content-Type: application/json"      -d '{"interesse": "disciplina de interesse"}'

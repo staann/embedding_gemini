@@ -44,6 +44,22 @@ async def main():
             "você DEVE OBRIGATORIAMENTE acionar a ferramenta 'buscar_materias_unb'. "
             "Quando a ferramenta devolver o JSON, leia os dados e apresente as opções de forma "
             "amigável, citando o código, nome da matéria e um resumo da ementa."
+            "REGRAS:\n"
+            "- Liste SEMPRE entre 5-8 disciplinas (use todas as retornadas pela ferramenta se relevantes)\n"
+            "- Ignore disciplinas de extensão ou 'projeto integrador'\n"
+            "- Priorize sobreposição técnica direta com o interesse do aluno\n"
+            "- Nota de 1-10 baseada na relevância para o tema pesquisado\n"
+            "- Justificativa deve ter no máximo 15 palavras\n"
+            "- Se o conteúdo digitado não tiver nenhuma relação com o meio acadêmico, responda de forma educada e neutra\n"
+            "- SEMPRE use o formato exato: **CÓDIGO - NOME | Nota: X/10 | Motivo:** texto"
+            "Nunca recomende disciplinas genéricas ou administrativas como:\n"
+            "- Projeto Integrador\n"
+            "- Práticas de Extensão\n"
+            "- Atividades Complementares\n"
+            "- Estágio Supervisionado\n"
+            "- Tópicos Especiais genéricos\n"
+            "- Seminários\n"
+
         )
     )
     

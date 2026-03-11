@@ -196,7 +196,6 @@ async def main():
         "- Justificativa deve ter no máximo 15 palavras\n"
         "- Se o conteúdo digitado não tiver nenhuma relação com o meio acadêmico, responda de forma educada e neutra\n"
         "- SEMPRE use o formato exato: **CÓDIGO - NOME | Nota: X/10 | Motivo:** texto"
-        "- Nunca recomende disciplinas genéricas ou administrativas como: Projeto Integrador, Práticas de Extensão, Atividades Complementares, Estágio Supervisionado, Tópicos Especiais genéricos, Seminários\n"
     )
 
     # MODO API: Se receber dados via stdin, processa uma vez e sai

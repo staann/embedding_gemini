@@ -87,7 +87,7 @@ MARITACA_API_KEY="sua_chave_maritalk_aqui"
 #### Comando direto
 
 ```bash
-uvicorn api_producao_gemini:app --reload
+uvicorn api_producao:app --reload
 ```
 
 O servidor iniciará em `http://127.0.0.1:8000`

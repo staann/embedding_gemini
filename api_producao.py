@@ -30,30 +30,36 @@ SYSTEM_PROMPT = (
     "1. Se a ferramenta 'buscar_materias_unb' retornar dados, você DEVE listar as disciplinas.\n"
     "2. Use EXATAMENTE este formato: **CÓDIGO - NOME DA DISCIPLINA | Nota: X/10 | Motivo:** justificativa curta.\n"
     "3. NÃO diga que não encontrou resultados se a ferramenta retornou uma lista.\n"
-    "4. NÃO adicione introduções ou conclusões. Apenas a lista."
+    "4. NÃO adicione introduções ou conclusões. Apenas a lista.\n"
+    "5. Ignore disicplinas genericas como 'Praticas de Extensão' ou 'Projeto Integrador' , 'Formação em ... ', etc."
 )
 
 TOOLS = [{
     "type": "function",
     "function": {
         "name": "buscar_materias_unb",
-        "description": "Busca matérias na base de dados da UnB usando o termo exato.",
+        "description": "Busca matérias na base de dados da UnB expandindo o termo de pesquisa.",
         "parameters": {
             "type": "object",
             "properties": {
-                "interesse": {
-                    "type": "string",
-                    "description": "Extraia APENAS a palavra-chave principal ou frase curta do usuário. NÃO adicione explicações ou termos extras. Exemplo: 'inteligência artificial'"
+                "termos_busca": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Lista com 4 strings: [termo_principal, palavra_chave1, palavra_chave2, palavra_chave3]. Ex: ['inteligência artificial', 'machine learning', 'redes neurais', 'dados']"
                 }
             },
-            "required": ["interesse"]
+            "required": ["termos_busca"]
         }
     }
 }]
 
 def parse_resposta_sabia(texto: str) -> list:
-    """Extrai as disciplinas do texto da IA."""
+    """Extrai as disciplinas do texto da IA bloqueando qualquer duplicação."""
     disciplinas = []
+    codigos_vistos = set() # O nosso rastreador de duplicatas
+    
     linhas = texto.split('\n')
     for linha in linhas:
         linha = linha.strip().lstrip('*').lstrip('-').lstrip('•').strip()
@@ -61,7 +67,14 @@ def parse_resposta_sabia(texto: str) -> list:
         if not codigo_match: continue
             
         try:
-            codigo = codigo_match.group(1)
+            codigo = codigo_match.group(1).upper()
+            
+            # Se já vimos esse código pula para a próxima linha
+            if codigo in codigos_vistos:
+                continue
+                
+            codigos_vistos.add(codigo) # Registra que já pegou essa matéria
+            
             resto = linha[len(codigo):].strip().lstrip('-').strip()
             
             nome = resto.split('|')[0].strip() if '|' in resto else resto.split('Nota:')[0].strip() if 'Nota:' in resto else resto.strip()
@@ -79,60 +92,81 @@ def parse_resposta_sabia(texto: str) -> list:
             disciplinas.append({"codigo": codigo, "nome": nome, "nota": nota, "justificativa": justificativa})
         except Exception:
             continue
+            
     return disciplinas
 
-def ferramenta_buscar_materias_unb(interesse: str) -> str:
+def ferramenta_buscar_materias_unb(termos_busca: list) -> str:
+    print(f"\n[DEBUG] 🧠 Termos recebidos da Maritaca: {termos_busca}")
     try:
-        termo_puro = interesse.replace(".", "").replace('"', "").strip()
-        print(f"\n[DEBUG] Buscando por: '{termo_puro}'")
-
+        # 1. GERAÇÃO EM LOTE (BATCH EMBEDDING): 1 única chamada para a API do Gemini
         result = genai.embed_content(
             model="models/gemini-embedding-001",
-            content=termo_puro,
-            task_type="retrieval_query", 
+            content=termos_busca, 
+            task_type="retrieval_query",
             output_dimensionality=256
         )
         
-        vetor = result.get('embeddings') or result.get('embedding')
-        if isinstance(vetor, list) and len(vetor) > 0 and isinstance(vetor[0], list):
-            vetor = vetor[0]
+        vetores = result.get('embeddings') or result.get('embedding')
+        resultados_finais = {}
 
-        # Aumentamos para 50 para garantir que as de Computação entrem na lista
-        resposta = supabase.rpc("match_materias", {
-            "query_embedding": vetor,
-            "match_threshold": 0.50, 
-            "match_count": 10         
-        }).execute()
-        
-        dados = resposta.data or []
-        
-        # FILTRO DE ELITE: Prioriza departamentos de tecnologia (CIC, FGA, ENE)
-        # e remove ruídos óbvios (Educação Física, Pedagogia) se houver opção melhor
-        #tecnologia = [i for i in dados if any(prefix in i.get('codigo_materia', '') for prefix in ['CIC', 'FGA', 'ENE', 'MAT'])]
-        #outros = [i for i in dados if i not in tecnologia]
-        
-        # Junta dando prioridade total para tecnologia
-        #dados_filtrados = (tecnologia + outros)[:20]
+        # 2. BUSCA NO BANCO: 1 por 1 para cada palavra-chave gerada pela Maritaca
+        for i, vetor in enumerate(vetores):
+            termo_atual = termos_busca[i]
+            print(f"[DEBUG] 🔍 Consultando Supabase para: '{termo_atual}'...")
+            
+            res = supabase.rpc("match_materias", {
+                "query_embedding": vetor,
+                "match_threshold": 0.55,
+                "match_count": 10 # Puxa as 5 melhores de cada termo
+            }).execute()
+            
+            print(f"[DEBUG] Resultados para '{termo_atual}': {len(res.data or [])} encontrados.")
+            print(f"[DEBUG] Dados brutos: {res.data}\n\n\n")
+            print(f'[DEBUG] {"-"*50}\n')
+            for item in (res.data or []):
+                # Pega o código, remove espaços em branco nas pontas e força MAIÚSCULA
+                codigo_bruto = item.get("codigo_materia") or ""
+                cod = str(codigo_bruto).strip().upper()
+                sim = item.get("similaridade", 0)
+                
+                # Só adiciona se o código for válido (não vazio)
+                if cod:
+                    if cod not in resultados_finais or sim > resultados_finais[cod]["similaridade"]:
+                        resultados_finais[cod] = item
 
-        print("\n" + "="*50)
-        print("🔍 DEBUG: MATÉRIAS DIRETAS DO BANCO (PRÉ-IA)")
-        for i, item in enumerate(dados):#dados_filtrados[:10]): # Mostra as top 10
-             print(f"{i+1}. {item.get('codigo_materia')} - {item.get('nome_materia')} (Sim: {item.get('similaridade')})")
-        print("="*50 + "\n")
-
-        lista_final = []
-        for item in dados:#dados_filtrados:
-            lista_final.append({
+        # Formatação final
+        lista_retorno = [
+            {
                 "codigo": item.get("codigo_materia"),
                 "nome": item.get("nome_materia"),
                 "similaridade": round(item.get("similaridade", 0), 2)
-            })
+            }
+            for item in resultados_finais.values()
+        ]
+            
+        # Ordena e limita a 15 para economizar tokens na resposta da Maritaca
+        lista_retorno = sorted(lista_retorno, key=lambda x: x['similaridade'], reverse=True)[:15]
+        #lista_final = []
+        
+        '''
+        for item in lista_retorno:
 
-        print(f"[DEBUG] Filtradas {len(lista_final)} matérias.")
-        return json.dumps(lista_final, ensure_ascii=False)
+            if item['codigo'] not in lista_final:
+                lista_final.append(item)
+        '''
+
+
+
+        print(f"[DEBUG] ✅ Total de matérias únicas retornadas: {len(lista_retorno)}")
+
+        for materia in lista_retorno:
+            print(f"[DEBUG] {materia['codigo']} - {materia['nome']} | Similaridade: {materia['similaridade']}")
+
+
+        return json.dumps(lista_retorno, ensure_ascii=False)
     
     except Exception as e:
-        print(f"Erro na ferramenta: {e}")
+        print(f"❌ Erro na ferramenta de busca: {e}")
         return json.dumps([])
 
 # 3. O ENDPOINT PRINCIPAL DA API
@@ -160,9 +194,13 @@ async def recomendar_materias(consulta: Consulta):
             tool_call = msg_ia.tool_calls[0] # Usa apenas a primeira para economia extrema
             args = json.loads(tool_call.function.arguments)
             
-            print(f"\n[DEBUG] Termo puro enviado para o banco: {args['interesse']}\n")
-            # Chama a função Python diretamente (Milissegundos!)
-            dados_banco = ferramenta_buscar_materias_unb(args["interesse"])
+            # ✅ CORREÇÃO: Extraindo 'termos_busca' em vez de 'interesse'
+            termos = args.get("termos_busca", [])
+            
+            print(f"\n[DEBUG] Termos enviados para o banco: {termos}\n")
+            
+            # Chama a função Python passando a lista
+            dados_banco = ferramenta_buscar_materias_unb(termos)
             
             mensagens.append({
                 "tool_call_id": tool_call.id,
